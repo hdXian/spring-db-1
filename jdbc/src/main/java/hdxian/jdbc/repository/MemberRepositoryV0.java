@@ -117,6 +117,29 @@ public class MemberRepositoryV0 {
 
     }
 
+    public void delete(String memberId) throws SQLException {
+        String sql = "delete from member where member_id = ?";
+
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+
+        try {
+            conn = getConnection();
+            pstmt = conn.prepareStatement(sql);
+
+            pstmt.setString(1, memberId);
+
+            int affectedRows = pstmt.executeUpdate(); // executeUpdate() returns affected rows
+            log.info("[MemberRepositoryV0.delete] query OK, affected rows={}", affectedRows);
+        } catch (SQLException e) {
+            log.error("[MemberRepositoryV0.update] SQL Ex occurs", e);
+            throw e;
+        } finally {
+            close(pstmt, conn, null); // ResultSet not used
+        }
+
+    }
+
     private void close(Statement st, Connection con, ResultSet rs) {
         log.error("[MemberRepositoryV0.close] closing connection...");
         // each element must be closed independently
