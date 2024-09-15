@@ -1,12 +1,16 @@
 package hdxian.jdbc.repository;
 
 import hdxian.jdbc.domain.Member;
+import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@Slf4j
 class MemberRepositoryV0Test {
 
     MemberRepositoryV0 repository = new MemberRepositoryV0();
@@ -14,8 +18,14 @@ class MemberRepositoryV0Test {
     @Test
     void curd() throws SQLException {
 
-        Member testUser1 = new Member("testUser1", 10000);
-        repository.save(testUser1); // checked SQL Ex
+        // save
+        Member testMember = new Member("testUser1", 10000);
+        repository.save(testMember); // checked SQL Ex
+
+        // findById
+        Member findMember = repository.findById(testMember.getMemberId());
+        log.info("findMember={}", findMember);
+        assertThat(findMember).isEqualTo(testMember);
 
     }
 }
