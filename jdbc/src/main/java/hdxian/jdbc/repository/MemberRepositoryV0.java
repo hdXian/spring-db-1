@@ -37,12 +37,13 @@ public class MemberRepositoryV0 {
 
             // 6. execute sql
             int affectedRows = pstmt.executeUpdate(); // executeUpdate() returns number of affected rows
+            log.info("[MemberRepositoryV0.save] query OK, affected rows={}", affectedRows);
 
             // 성공한 경우에만 member 리턴
             return member;
 
         } catch (SQLException e) {
-            log.error("[MemberRepositoryV0] SQL Ex occurs", e);
+            log.error("[MemberRepositoryV0.save] SQL Ex occurs", e);
             throw e;
         } finally {
             close(pstmt, conn, null); // ResultSet not used yet.
@@ -87,6 +88,31 @@ public class MemberRepositoryV0 {
             throw e;
         } finally {
             close(pstmt, conn, rs);
+        }
+
+    }
+
+    // it's similar with save
+    public void update(String memberId, int money) throws SQLException {
+        String sql = "update member set money = ? where member_id = ?";
+
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+
+        try {
+            conn = getConnection();
+            pstmt = conn.prepareStatement(sql);
+
+            pstmt.setInt(1, money);
+            pstmt.setString(2, memberId);
+
+            int affectedRows = pstmt.executeUpdate(); // executeUpdate() returns affected rows
+            log.info("[MemberRepositoryV0.update] query OK, affected rows={}", affectedRows);
+        } catch (SQLException e) {
+            log.error("[MemberRepositoryV0.update] SQL Ex occurs", e);
+            throw e;
+        } finally {
+            close(pstmt, conn, null); // ResultSet not used
         }
 
     }
