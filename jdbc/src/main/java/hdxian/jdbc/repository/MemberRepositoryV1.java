@@ -3,18 +3,26 @@ package hdxian.jdbc.repository;
 import hdxian.jdbc.connection.DBConnectionUtil;
 import hdxian.jdbc.domain.Member;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.support.JdbcUtils;
 import org.springframework.stereotype.Repository;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.NoSuchElementException;
 
 /**
- * V0 - use JDBC Driver Manager
+ * V1 - use DataSource, JdbcUtils
  *
  */
 @Slf4j
-@Repository
-public class MemberRepositoryV0 {
+public class MemberRepositoryV1 {
+
+    // DI
+    private final DataSource dataSource;
+
+    public MemberRepositoryV1(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 
     public Member save(Member member) throws SQLException {
         // 1. generate insert sql
@@ -37,16 +45,16 @@ public class MemberRepositoryV0 {
 
             // 6. execute sql
             int affectedRows = pstmt.executeUpdate(); // executeUpdate() returns number of affected rows
-            log.info("[MemberRepositoryV0.save] query OK, affected rows={}", affectedRows);
+            log.info("[MemberRepositoryV1.save] query OK, affected rows={}", affectedRows);
 
             // 성공한 경우에만 member 리턴
             return member;
 
         } catch (SQLException e) {
-            log.error("[MemberRepositoryV0.save] SQL Ex occurs", e);
+            log.error("[MemberRepositoryV1.save] SQL Ex occurs", e);
             throw e;
         } finally {
-            close(pstmt, conn, null); // ResultSet not used yet.
+            close(null, pstmt, conn); // ResultSet not used yet.
         }
 
     }
@@ -84,10 +92,10 @@ public class MemberRepositoryV0 {
             }
 
         } catch (SQLException e) {
-            log.error("[MemberRepositoryV0.findById] SQL Ex occurs", e);
+            log.error("[MemberRepositoryV1.findById] SQL Ex occurs", e);
             throw e;
         } finally {
-            close(pstmt, conn, rs);
+            close(null, pstmt, conn);
         }
 
     }
@@ -107,12 +115,12 @@ public class MemberRepositoryV0 {
             pstmt.setString(2, memberId);
 
             int affectedRows = pstmt.executeUpdate(); // executeUpdate() returns affected rows
-            log.info("[MemberRepositoryV0.update] query OK, affected rows={}", affectedRows);
+            log.info("[MemberRepositoryV1.update] query OK, affected rows={}", affectedRows);
         } catch (SQLException e) {
-            log.error("[MemberRepositoryV0.update] SQL Ex occurs", e);
+            log.error("[MemberRepositoryV1.update] SQL Ex occurs", e);
             throw e;
         } finally {
-            close(pstmt, conn, null); // ResultSet not used
+            close(null, pstmt, conn); // ResultSet not used
         }
 
     }
@@ -130,48 +138,30 @@ public class MemberRepositoryV0 {
             pstmt.setString(1, memberId);
 
             int affectedRows = pstmt.executeUpdate(); // executeUpdate() returns affected rows
-            log.info("[MemberRepositoryV0.delete] query OK, affected rows={}", affectedRows);
+            log.info("[MemberRepositoryV1.delete] query OK, affected rows={}", affectedRows);
         } catch (SQLException e) {
-            log.error("[MemberRepositoryV0.update] SQL Ex occurs", e);
+            log.error("[MemberRepositoryV1.update] SQL Ex occurs", e);
             throw e;
         } finally {
-            close(pstmt, conn, null); // ResultSet not used
+            close(null, pstmt, conn); // ResultSet not used
         }
 
     }
 
-    private void close(Statement st, Connection con, ResultSet rs) {
-        log.info("[MemberRepositoryV0.close] closing connection...");
-        // each element must be closed independently
-
-        if(st != null) {
-            try {
-                st.close();
-            } catch (SQLException e) {
-                log.error("[MemberRepositoryV0.close(statement)] SQL ex occurs", e);
-            }
-        }
-
-        if (con != null) {
-            try {
-                con.close();
-            } catch (SQLException e) {
-                log.error("[MemberRepositoryV0.close(conn)] SQL ex occurs", e);
-            }
-        }
-
-        if (rs != null) {
-            try {
-                rs.close();
-            } catch (SQLException e) {
-                log.error("[MemberRepositoryV0.close(rs)] SQL ex occurs", e);
-            }
-        }
-
+    private void close(ResultSet rs, Statement st, Connection con) {
+        log.info("[MemberRepositoryV1.close] closing connection...");
+        // each element must be closed independently.
+        // reverse order of when the connection was created.
+        JdbcUtils.closeResultSet(rs);
+        JdbcUtils.closeStatement(st);
+        JdbcUtils.closeConnection(con);
     }
 
-    private Connection getConnection() {
-        return DBConnectionUtil.getConnection();
+    private Connection getConnection() throws SQLException {
+        // use DataSource
+        Connection con = dataSource.getConnection();
+        log.info("get conn={}, class={}", con, con.getClass());
+        return con;
     }
 
 }
