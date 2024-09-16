@@ -43,13 +43,13 @@ public class MemberRepositoryV2 {
 
             // 6. execute sql
             int affectedRows = pstmt.executeUpdate(); // executeUpdate() returns number of affected rows
-            log.info("[MemberRepositoryV1.save] query OK, affected rows={}", affectedRows);
+            log.info("[MemberRepositoryV2.save] query OK, affected rows={}", affectedRows);
 
             // 성공한 경우에만 member 리턴
             return member;
 
         } catch (SQLException e) {
-            log.error("[MemberRepositoryV1.save] SQL Ex occurs", e);
+            log.error("[MemberRepositoryV2.save] SQL Ex occurs", e);
             throw e;
         } finally {
             close(null, pstmt, conn); // ResultSet not used yet.
@@ -90,10 +90,10 @@ public class MemberRepositoryV2 {
             }
 
         } catch (SQLException e) {
-            log.error("[MemberRepositoryV1.findById] SQL Ex occurs", e);
+            log.error("[MemberRepositoryV2.findById] SQL Ex occurs", e);
             throw e;
         } finally {
-            close(null, pstmt, conn);
+            close(rs, pstmt, conn);
         }
 
     }
@@ -130,7 +130,7 @@ public class MemberRepositoryV2 {
             }
 
         } catch (SQLException e) {
-            log.error("[MemberRepositoryV1.findById] SQL Ex occurs", e);
+            log.error("[MemberRepositoryV2.findById] SQL Ex occurs", e);
             throw e;
         } finally {
             // not close Connection at here. (will close it on Service layer)
@@ -155,9 +155,9 @@ public class MemberRepositoryV2 {
             pstmt.setString(2, memberId);
 
             int affectedRows = pstmt.executeUpdate(); // executeUpdate() returns affected rows
-            log.info("[MemberRepositoryV1.update] query OK, affected rows={}", affectedRows);
+            log.info("[MemberRepositoryV2.update] query OK, affected rows={}", affectedRows);
         } catch (SQLException e) {
-            log.error("[MemberRepositoryV1.update] SQL Ex occurs", e);
+            log.error("[MemberRepositoryV2.update] SQL Ex occurs", e);
             throw e;
         } finally {
             close(null, pstmt, conn); // ResultSet not used
@@ -179,9 +179,9 @@ public class MemberRepositoryV2 {
             pstmt.setString(2, memberId);
 
             int affectedRows = pstmt.executeUpdate(); // executeUpdate() returns affected rows
-            log.info("[MemberRepositoryV1.update] query OK, affected rows={}", affectedRows);
+            log.info("[MemberRepositoryV2.update] query OK, affected rows={}", affectedRows);
         } catch (SQLException e) {
-            log.error("[MemberRepositoryV1.update] SQL Ex occurs", e);
+            log.error("[MemberRepositoryV2.update] SQL Ex occurs", e);
             throw e;
         } finally {
             // not close Connection at here
@@ -203,9 +203,9 @@ public class MemberRepositoryV2 {
             pstmt.setString(1, memberId);
 
             int affectedRows = pstmt.executeUpdate(); // executeUpdate() returns affected rows
-            log.info("[MemberRepositoryV1.delete] query OK, affected rows={}", affectedRows);
+            log.info("[MemberRepositoryV2.delete] query OK, affected rows={}", affectedRows);
         } catch (SQLException e) {
-            log.error("[MemberRepositoryV1.update] SQL Ex occurs", e);
+            log.error("[MemberRepositoryV2.update] SQL Ex occurs", e);
             throw e;
         } finally {
             close(null, pstmt, conn); // ResultSet not used
@@ -214,7 +214,7 @@ public class MemberRepositoryV2 {
     }
 
     private void close(ResultSet rs, Statement st, Connection con) {
-        log.info("[MemberRepositoryV1.close] closing connection...");
+        log.info("[MemberRepositoryV2.close] closing connection...");
         // each element must be closed independently.
         // reverse order of when the connection was created.
         JdbcUtils.closeResultSet(rs);
