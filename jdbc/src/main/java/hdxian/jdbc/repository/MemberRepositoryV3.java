@@ -1,26 +1,26 @@
 package hdxian.jdbc.repository;
 
-import hdxian.jdbc.connection.DBConnectionUtil;
 import hdxian.jdbc.domain.Member;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.support.JdbcUtils;
-import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.NoSuchElementException;
 
 /**
- * V1 - use DataSource, JdbcUtils
- *
+ * V3 - get Connections from TransactionManager (트랜잭션 시작, 종료(커밋 또는 롤백), 커넥션 릴리즈 수행)
+ * DataSourceUtils.getConnection()
+ * DataSourceUtils.releaseConnection()
  */
 @Slf4j
-public class MemberRepositoryV1 {
+public class MemberRepositoryV3 {
 
     // DI
-    private final DataSource dataSource;
+    private final DataSource dataSource; // 커넥션 가져오기. 근데 트랜잭션 매니저를 통해 가져올 것. (DataSourceUtils)
 
-    public MemberRepositoryV1(DataSource dataSource) {
+    public MemberRepositoryV3(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
@@ -45,13 +45,13 @@ public class MemberRepositoryV1 {
 
             // 6. execute sql
             int affectedRows = pstmt.executeUpdate(); // executeUpdate() returns number of affected rows
-            log.info("[MemberRepositoryV1.save] query OK, affected rows={}", affectedRows);
+            log.info("[MemberRepositoryV3.save] query OK, affected rows={}", affectedRows);
 
             // 성공한 경우에만 member 리턴
             return member;
 
         } catch (SQLException e) {
-            log.error("[MemberRepositoryV1.save] SQL Ex occurs", e);
+            log.error("[MemberRepositoryV3.save] SQL Ex occurs", e);
             throw e;
         } finally {
             close(null, pstmt, conn); // ResultSet not used yet.
@@ -92,7 +92,7 @@ public class MemberRepositoryV1 {
             }
 
         } catch (SQLException e) {
-            log.error("[MemberRepositoryV1.findById] SQL Ex occurs", e);
+            log.error("[MemberRepositoryV3.findById] SQL Ex occurs", e);
             throw e;
         } finally {
             close(rs, pstmt, conn);
@@ -115,15 +115,16 @@ public class MemberRepositoryV1 {
             pstmt.setString(2, memberId);
 
             int affectedRows = pstmt.executeUpdate(); // executeUpdate() returns affected rows
-            log.info("[MemberRepositoryV1.update] query OK, affected rows={}", affectedRows);
+            log.info("[MemberRepositoryV3.update] query OK, affected rows={}", affectedRows);
         } catch (SQLException e) {
-            log.error("[MemberRepositoryV1.update] SQL Ex occurs", e);
+            log.error("[MemberRepositoryV3.update] SQL Ex occurs", e);
             throw e;
         } finally {
             close(null, pstmt, conn); // ResultSet not used
         }
 
     }
+
 
     public void delete(String memberId) throws SQLException {
         String sql = "delete from member where member_id = ?";
@@ -138,9 +139,9 @@ public class MemberRepositoryV1 {
             pstmt.setString(1, memberId);
 
             int affectedRows = pstmt.executeUpdate(); // executeUpdate() returns affected rows
-            log.info("[MemberRepositoryV1.delete] query OK, affected rows={}", affectedRows);
+            log.info("[MemberRepositoryV3.delete] query OK, affected rows={}", affectedRows);
         } catch (SQLException e) {
-            log.error("[MemberRepositoryV1.update] SQL Ex occurs", e);
+            log.error("[MemberRepositoryV3.update] SQL Ex occurs", e);
             throw e;
         } finally {
             close(null, pstmt, conn); // ResultSet not used
@@ -149,17 +150,20 @@ public class MemberRepositoryV1 {
     }
 
     private void close(ResultSet rs, Statement st, Connection con) {
-        log.info("[MemberRepositoryV1.close] closing connection...");
-        // each element must be closed independently.
-        // reverse order of when the connection was created.
+        log.info("[MemberRepositoryV3.close] closing connection...");
+
+        // reverse order
         JdbcUtils.closeResultSet(rs);
         JdbcUtils.closeStatement(st);
-        JdbcUtils.closeConnection(con);
+//        JdbcUtils.closeConnection(con);
+        // 트랜잭션 매니저에 의해 관리되는 커넥션인 경우 닫지 않고 넘김.
+        // 관리되는 커넥션이 아닌 경우 여기에서 닫음.
+        DataSourceUtils.releaseConnection(con, dataSource);
     }
 
     private Connection getConnection() throws SQLException {
-        // use DataSource
-        Connection con = dataSource.getConnection();
+        // 트랜잭션 동기화(트랜잭션동안 같은 커넥션 사용)를 위해선 DataSourceUtils를 사용해야 함.
+        Connection con = DataSourceUtils.getConnection(dataSource);
         log.info("get conn={}, class={}", con, con.getClass());
         return con;
     }
