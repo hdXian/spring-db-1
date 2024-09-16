@@ -27,6 +27,9 @@ public class MemberServiceV3_2 {
     public void accountTransfer(String fromId, String toId, int amount) {
 
         // template callback pattern
+        // 1. 내부적으로 트랜잭션 시작 (txTemplate는 TransactionManager를 가지고 있음)
+        // 2. 람다로 넣어둔 로직 실행
+        // 3. 람다 실행 후 콜백 메서드 실행 -> 콜백 메서드 내용: 실행 결과를 확인하고 성공하면 커밋, 실패하면 롤백
         txTemplate.executeWithoutResult((status) -> {
             try {
                 bizLogic(fromId, toId, amount);
