@@ -21,8 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
-// 트랜잭션 - @Transactional AOP
-// AOP -> 아직은 프록시가 사용된다 정도로만 이해.
+// 트랜잭션 - DataSource, TransactionManager 자동 등록
 
 @Slf4j
 @SpringBootTest
