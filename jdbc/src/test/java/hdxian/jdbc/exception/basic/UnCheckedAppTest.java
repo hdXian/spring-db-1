@@ -67,7 +67,8 @@ public class UnCheckedAppTest {
             try {
                 runSQL();
             } catch (SQLException e) {
-                throw new MyRuntimeSQLException(e); // 기존 예외 정보를 만드시 포함해야 한다. (생성자에 기존 예외 e 전달)
+                throw new MyRuntimeSQLException(e); // 기존 예외 정보를 반드시 포함해야 한다. (생성자에 기존 예외 e 전달)
+//                throw new MyRuntimeSQLException(); // 예외 정보를 포함하지 않으면 기존 예외 정보가 상위로 전달되지 않는다.
             }
         }
 
