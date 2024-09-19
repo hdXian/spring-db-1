@@ -5,6 +5,7 @@ import hdxian.jdbc.domain.Member;
 import hdxian.jdbc.repository.MemberRepository;
 import hdxian.jdbc.repository.MemberRepositoryV3;
 import hdxian.jdbc.repository.MemberRepositoryV4_1;
+import hdxian.jdbc.repository.MemberRepositoryV4_2;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -63,7 +64,8 @@ class MemberServiceV4Test {
 
         @Bean
         MemberRepository memberRepository() {
-            return new MemberRepositoryV4_1(dataSource);
+//            return new MemberRepositoryV4_1(dataSource);
+            return new MemberRepositoryV4_2(dataSource);
         }
 
         @Bean
